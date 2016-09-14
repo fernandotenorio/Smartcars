@@ -46,6 +46,7 @@ public class Car implements Comparable<Car>
 			
 		return 0;
 	}
+	
 	public Point getCenter()
 	{
 		return new Point(x + w/2, y + h/2);
@@ -124,7 +125,7 @@ class Item
 	int x;
 	int y;
 	int size = 6;
-	Color color = new Color(0, 160, 0);
+	Color color = new Color(255, 0, 0);
 	
 	public Item(int x, int y)
 	{
@@ -135,8 +136,8 @@ class Item
 	public void draw(Graphics2D g)
 	{
 		g.setColor(color);
-		//g.fillRect(x, y, size, size);
-		g.drawRect(x, y, size, size);
+		g.fillRect(x, y, size, size);
+		//g.drawRect(x, y, size, size);
 	}
 	
 	public Point getCenter()

@@ -27,18 +27,19 @@ public class World
 	//Statistics
 	ArrayList<Float> bestList = new ArrayList<Float>();
 	ArrayList<Float> averageList = new ArrayList<Float>();
-	final int cycles = 1200;
+	final int cycles = 1000;	//life time in cycles for each generation
+	final int cycles_test = 30; // wait cycles_test generations to change item positions
 	
 	//NN settings
 	final int inputs = 4;
 	final int outputs = 2;
 	final int hidden = 1;
-	final int neuronsPerHidden = 6;
+	final int neuronsPerHidden = 8;
 
 	//GA
 	GeneticAlgorithm<Double, Double> ga = null;
-	final float mutationRate = 0.3f;
-	final float cxRate = 0.9f;
+	final float mutationRate = 0.15f;
+	final float cxRate = 0.5f;
 	final int elite = 4;
 	Random random = new Random();	
 	
@@ -46,6 +47,8 @@ public class World
 	{
 		this.w = w;
 		this.h = h;
+
+		ncars = (ncars % 2 == 1) ? ncars + 1:ncars;
 		
 		cars = new ArrayList<Car>(ncars);
 		items = new ArrayList<Item>(nitems);
@@ -98,8 +101,7 @@ public class World
 		ga = new GeneticAlgorithm<Double, Double>(population, null, mutationRate, cxRate, elite, CrossoverType.CX_BLEND, 
 		MutationType.MUT_GAUSS);
 		
-		screen = new Rectangle(0, 0, w, h);
-											
+		screen = new Rectangle(0, 0, w, h);										
 	}
 	
 	private void pickItems()
@@ -116,8 +118,10 @@ public class World
 				if (Math.sqrt(dx * dx + dy * dy) < carSize/2)
 				{
 					car.fitness += 1;
-					item.x = random.nextInt(w - itemSize);
-					item.y = random.nextInt(h - itemSize);
+					//item.x = random.nextInt(w - itemSize);
+					//item.y = random.nextInt(h - itemSize);
+					item.x = 9999;
+					item.y = 9999;
 				}
 			}
 		}
@@ -131,7 +135,15 @@ public class World
 			c.x = carPositions[i].x;
 			c.y = carPositions[i].y;
 		}
-		
+
+		// New item positions
+		if (test_counter >= cycles_test){
+			System.out.println("Changing item positions");
+			test_counter = 0;
+			for (int i = 0; i < itemPositions.length; i++)
+			itemPositions[i] = new Point(random.nextInt(w - itemSize), random.nextInt(h - itemSize));	
+		}
+				
 		for (int i = 0; i < items.size(); i++)
 		{
 			Item item = items.get(i);
@@ -142,6 +154,9 @@ public class World
 	
 	private Rectangle carRect = new Rectangle(0, 0, 0, 0);
 	private int m = 0;	
+	private int test_counter = 0;
+	private int gen = 0;
+
 	public void update()
 	{				
 		for (int i = 0; i < cars.size(); i++)
@@ -182,7 +197,8 @@ public class World
 		}				
 		
 		if (m == cycles)
-		{												
+		{											
+			gen++;	
 			float averageFitness = 0.0f;
 			float bestFitness = 0.0f;
 				
@@ -203,7 +219,7 @@ public class World
 			
 			System.out.println("Average fitness: " + averageFitness/cars.size());
 			System.out.println("Best fitness: " + bestFitness);
-			System.out.println();
+			System.out.println("Generation: " + gen);
 			
 			ga.evolve();						
 						
@@ -221,6 +237,7 @@ public class World
 			
 			resetWorld();
 			m = 0;
+			test_counter++;
 		}
 		else
 		{			
@@ -284,10 +301,11 @@ public class World
 
  class WorldPanel extends JPanel implements Runnable
 {
-	int w = 700;
+	int w = 600;
 	int h = 600;
 	int cars = 20;
-	int items = 120;
+	int items = 150;
+
 	World world = new World(cars, items, w, h);
 	ScheduledThreadPoolExecutor animator = null;
 	static long FPS = 120L;
